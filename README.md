@@ -17,6 +17,35 @@ $ docker build -f Dockerfile -t <DOCKERHUB_USER>/hit_record:latest .
 $ docker push <DOCKERHUB_USER>/hit_record:latest
 ```
 
+Github Action:
+
+```yaml
+name: Docker Image CI
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag ${{ secrets.DOCKERHUB_USERNAME }}/hitrecord:latest
+    -
+      name: Login to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Push the image
+      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/hitrecord:latest
+```
+
+Needed to set the secret with api token collected from DOCKERHUB. This action do work for tag release published.
+
+
 # 2. JenkinsServer
 Need docker-compose.
 
@@ -146,3 +175,69 @@ hit-record-api-v2-deployment-767d67bb4d-cwckk       1/1     Running   0         
 hit-record-release-nginx-ingress-64f777454d-6ctj2   1/1     Running   2 (10h ago)   18h
 redis-deployment-756b4b8956-hbqmk                   1/1     Running   0             3m21s
 ```
+
+
+As I was in need to deploy v1 to  workernode1 and v2 to workernode2, rewritten deployment file:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hit-record-api-v1-deployment
+  labels:
+    app: hit-record-api-v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hit-record-api-v1
+  template:
+    metadata:
+      labels:
+        app: hit-record-api-v1
+    spec:
+      nodeName: workernode1
+      containers:
+      - name: hit-record-api-v1
+        image: fahadahammed/hit_record:latest
+        ports:
+        - containerPort: 22000
+        env:
+          - name: API_VERSION
+            valueFrom:
+              configMapKeyRef:
+                name: hit-record-configmap
+                key: hit_record_api_v1
+          - name: REDIS_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: hit-record-configmap
+                key: redis_host
+```
+
+Let's try API access with version:
+
+```bash
+fahad@Bongos-MacBook-Air deployment % curl http://hitrecord.example.com/api/v1/
+{
+  "datetime": "Sun, 06 Mar 2022 15:09:29 GMT", 
+  "hit_count": 1, 
+  "hostname": "hit-record-api-v1-deployment-68b97bb87-j8v6t", 
+  "msg": "Welcome to hit_record! I am going to record the hit count in redis.", 
+  "version": "v1"
+}
+```
+
+
+```bash
+% curl http://hitrecord.example.com/api/v2/
+{
+  "datetime": "Sun, 06 Mar 2022 15:09:32 GMT", 
+  "hit_count": 2, 
+  "hostname": "hit-record-api-v2-deployment-767d67bb4d-sc5zm", 
+  "msg": "Welcome to hit_record! I am going to record the hit count in redis.", 
+  "version": "v2"
+}
+```
+
+I have made the routing based on api version on url.
