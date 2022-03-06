@@ -93,9 +93,56 @@ It will create the cluster.
 
 # 5. Deploy the hit_record APP with k3s
 
+Need ingress
+
+```
+helm install hitrecord-ingress nginx-stable/nginx-ingress
+```
+
+
 ```bash
 $ cd deployment
 $ kubectl apply -f .
 ```
 
 This will deploy the application.
+
+
+```bash
+# kubectl apply -f .
+deployment.apps/hit-record-api-v1-deployment created
+service/hit-record-api-v1-service created
+deployment.apps/hit-record-api-v2-deployment created
+service/hit-record-api-v2-service created
+configmap/hit-record-configmap created
+ingress.networking.k8s.io/hitrecord-ingress created
+deployment.apps/redis-deployment created
+service/redis-service created
+```
+
+Need helm to install linkerd and inject linkerd
+
+```commandline
+$ curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/install | sh
+```
+
+```bash
+$ cat hit_record_api_v1_deployment.yaml| linkerd inject - | kubectl apply -f -
+$ cat hit_record_api_v2_deployment.yaml| linkerd inject - | kubectl apply -f -
+```
+
+Visualize
+
+```bash
+$ linkerd viz install | kubectl apply -f -
+$ linkerd viz dashboard
+```
+
+```bash
+% kubectl get pods                        
+NAME                                                READY   STATUS    RESTARTS      AGE
+hit-record-api-v1-deployment-68b97bb87-wlth2        1/1     Running   0             3m22s
+hit-record-api-v2-deployment-767d67bb4d-cwckk       1/1     Running   0             3m21s
+hit-record-release-nginx-ingress-64f777454d-6ctj2   1/1     Running   2 (10h ago)   18h
+redis-deployment-756b4b8956-hbqmk                   1/1     Running   0             3m21s
+```
