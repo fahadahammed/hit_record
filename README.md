@@ -218,7 +218,7 @@ spec:
 Let's try API access with version:
 
 ```bash
-fahad@Bongos-MacBook-Air deployment % curl http://hitrecord.example.com/api/v1/
+% curl http://hitrecord.example.com/api/v1/
 {
   "datetime": "Sun, 06 Mar 2022 15:09:29 GMT", 
   "hit_count": 1, 
