@@ -1,4 +1,4 @@
-#  Copyright (c) Fahad Ahammed 2022.
+#  Copyright (c) Fahad Ahammed 2024.
 import datetime
 
 from src import app

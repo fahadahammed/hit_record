@@ -1,0 +1,60 @@
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: hitrecord-ingress
+#   namespace: hitrecord
+# spec:
+#   ingressClassName: nginx
+#   rules:
+#   - host: hitrecordrs.fahadahammed.com
+#     http:
+#       paths:
+#       - path: /api/v1
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: hit-record-api-v1-service
+#             port:
+#               number: 80
+#       - path: /api/v2
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: hit-record-api-v2-service
+#             port:
+#               number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: hitrecord
+  name: hitrecord-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx    
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.org/server-snippets: "gzip on;"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:  
+  tls:
+  - hosts:
+    - 'hitrecordrs.fahadahammed.com'
+    secretName: 'hitrecordrs.fahadahammed.com'
+  rules:
+  - host: hitrecordrs.fahadahammed.com
+    http:
+      paths:
+      - path: /api/v1
+        pathType: Prefix
+        backend:
+          service:
+            name: hit-record-api-v1-service
+            port:
+              number: 80
+      - path: /api/v2
+        pathType: Prefix
+        backend:
+          service:
+            name: hit-record-api-v2-service
+            port:
+              number: 80

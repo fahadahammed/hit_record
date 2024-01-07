@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hit-record-api-v2-deployment
+  labels:
+    app: hit-record-api-v2
+  namespace: hitrecord
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hit-record-api-v2
+  template:
+    metadata:
+      labels:
+        app: hit-record-api-v2
+    spec:
+      containers:
+      - name: hit-record-api-v2
+        image: fahadahammed/hit_record:latest
+        ports:
+        - containerPort: 22000
+        env:
+          - name: API_VERSION
+            valueFrom:
+              configMapKeyRef:
+                name: hit-record-configmap
+                key: hit_record_api_v2
+          - name: REDIS_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: hit-record-configmap
+                key: redis_host
