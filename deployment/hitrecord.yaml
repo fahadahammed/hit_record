@@ -1,0 +1,222 @@
+#---
+#apiVersion: v1
+#kind: Namespace
+#metadata:
+#  name: hitrecord
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: hitrecord-redis-efs-pv
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  csi:
+    driver: efs.csi.aws.com
+    volumeHandle: fs-1cd7eb29
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: efs-sc
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hitrecord-redis-efs-pvc
+  namespace: hitrecord
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: efs-sc
+  volumeMode: Filesystem
+  volumeName: hitrecord-redis-efs-pv
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-deployment
+  namespace: hitrecord
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:latest
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+      volumes:
+        - name: redis-data
+          persistentVolumeClaim:
+            claimName: hitrecord-redis-efs-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: hitrecord
+spec:
+  type: ClusterIP
+  selector:
+    app: redis
+  ports:
+    - protocol: TCP
+      port: 6379
+      targetPort: 6379
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hit-record-configmap
+  namespace: hitrecord
+data:
+  redis_host: "redis-service"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hit-record-api-latest-deployment
+  labels:
+    app: hit-record-api-latest
+  namespace: hitrecord
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hit-record-api-latest
+  template:
+    metadata:
+      labels:
+        app: hit-record-api-latest
+    spec:
+      containers:
+        - name: hit-record-api-latest
+          image: fahadahammed/hit_record:latest
+          ports:
+            - containerPort: 22000
+          env:
+            - name: API_VERSION
+              value: latest
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: hit-record-configmap
+                  key: redis_host
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hit-record-api-old-deployment
+  labels:
+    app: hit-record-api-old
+  namespace: hitrecord
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hit-record-api-old
+  template:
+    metadata:
+      labels:
+        app: hit-record-api-old
+    spec:
+      containers:
+        - name: hit-record-api-old
+          image: fahadahammed/hit_record:latest
+          ports:
+            - containerPort: 22000
+          env:
+            - name: API_VERSION
+              value: old
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: hit-record-configmap
+                  key: redis_host
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hit-record-api-latest-service
+  namespace: hitrecord
+spec:
+  type: ClusterIP
+  selector:
+    app: hit-record-api-latest
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 22000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hit-record-api-old-service
+  namespace: hitrecord
+spec:
+  type: ClusterIP
+  selector:
+    app: hit-record-api-old
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 22000
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  namespace: 'hitrecord'
+  name: 'hitrecord.fahadahammed.com'
+spec:
+  secretName: 'hitrecord.fahadahammed.com'
+  subject:
+    organizations:
+      - hitrecord
+  dnsNames:
+  - 'hitrecord.fahadahammed.com'
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hitrecord-ingress
+  namespace: hitrecord
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - 'hitrecord.fahadahammed.com'
+    secretName: 'hitrecord.fahadahammed.com'
+  rules:
+    - host: hitrecord.fahadahammed.com
+      http:
+        paths:
+          - path: /api/latest
+            pathType: Prefix
+            backend:
+              service:
+                name: hit-record-api-latest-service
+                port:
+                  number: 80
+          - path: /api/old
+            pathType: Prefix
+            backend:
+              service:
+                name: hit-record-api-old-service
+                port:
+                  number: 80
