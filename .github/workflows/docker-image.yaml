@@ -18,7 +18,7 @@ jobs:
       id: get-tag
       shell: bash
       run: |
-        LAST_TAG=$(git describe --tags --abbrev=0 $(git describe --tags --abbrev=0)^)
+        LAST_TAG=$(git describe --tags --abbrev=0 $(git describe --tags --abbrev=0)~)
         echo "Last tag: $LAST_TAG"
 
     - name: Use the last tag as an output variable
