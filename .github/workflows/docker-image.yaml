@@ -23,25 +23,6 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-#    - name: Setup Skopeo
-#      run: |
-#        sudo apt-get update -y && sudo apt-get install -y skopeo
-
-#    - name: Get last tag
-#      id: get-tag
-#      shell: bash
-#      run: |
-#        LAST_TAG=$(git describe --tags --abbrev=0 $(git describe --tags --abbrev=0)~)
-#        echo "Last tag: $LAST_TAG"
-#
-#    - name: Use the last tag as an output variable
-#      run: echo "LAST_TAG=${{ steps.get-tag.outputs.LAST_TAG }}" >> $GITHUB_ENV
-
-#    - name: Check Variables
-#      run: |
-#        echo ${{env.VERSION}}
-#        echo ${{env.LAST_TAG}}
-
     - name: Build the Container image
       run: |
         docker build . --file Dockerfile --tag ${{ secrets.DOCKERHUB_USERNAME }}/hitrecord:${{env.VERSION}}
@@ -61,6 +42,6 @@ jobs:
 
     - name: Check Variables
       run: |
-        echo $VERSION $GITHUB_ENV
+        echo $VERSION $LAST_TAG
 #        echo ${{env.VERSION}}
 #        echo ${{env.LAST_TAG}}
