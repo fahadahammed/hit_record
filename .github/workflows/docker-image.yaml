@@ -3,9 +3,9 @@ name: Docker Image Build and Publish
 on:
   release:
     types: [published]
-#  push:
-#    branches:
-#      - main
+  push:
+    branches:
+      - main
 
 env:
   VERSION: ${{github.ref_name}}
@@ -56,7 +56,7 @@ jobs:
       id: get-tag
       shell: bash
       run: |
-        LAST_TAG=$(curl -k -s https://hitrecord.fahadahammed.com/api/latest/ | jq -r '.version'')
+        LAST_TAG=$(curl -k -s https://hitrecord.fahadahammed.com/api/latest/ | jq -r '.version')
         echo "LAST_TAG=$LAST_TAG" >> $GITHUB_ENV
 
     - name: Check Variables
