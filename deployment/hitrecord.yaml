@@ -126,6 +126,8 @@ spec:
           env:
             - name: API_VERSION
               value: #{LATEST_TAG}#
+            - name: API_STATE
+              value: new
             - name: REDIS_HOST
               valueFrom:
                 configMapKeyRef:
@@ -157,6 +159,8 @@ spec:
           env:
             - name: API_VERSION
               value: #{LAST_TAG}#
+            - name: API_STATE
+              value: old
             - name: REDIS_HOST
               valueFrom:
                 configMapKeyRef:
@@ -206,14 +210,14 @@ spec:
     - host: hitrecord.fahadahammed.com
       http:
         paths:
-          - path: /new
+          - path: /api/new
             pathType: Prefix
             backend:
               service:
                 name: hit-record-api-latest-service
                 port:
                   number: 80
-          - path: /old
+          - path: /api/old
             pathType: Prefix
             backend:
               service:

@@ -8,7 +8,8 @@ import socket
 
 
 @app.route(f"/api", methods=["GET"])
-@app.route(f"/api/", methods=["GET"])
+@app.route(f"/api/{app.config.get('API_STATE')}", methods=["GET"])
+@app.route(f"/api/{app.config.get('API_STATE')}/", methods=["GET"])
 def index():
     to_return = {
         "msg": "Welcome to hit_record! I am going to record the hit count in redis.",
