@@ -4,6 +4,22 @@
 #metadata:
 #  name: hitrecord
 ---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  namespace: 'hitrecord'
+  name: 'hitrecord.fahadahammed.com'
+spec:
+  secretName: 'hitrecord.fahadahammed.com'
+  subject:
+    organizations:
+      - hitrecord
+  dnsNames:
+  - 'hitrecord.fahadahammed.com'
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -175,22 +191,6 @@ spec:
       port: 80
       targetPort: 22000
 ---
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  namespace: 'hitrecord'
-  name: 'hitrecord.fahadahammed.com'
-spec:
-  secretName: 'hitrecord.fahadahammed.com'
-  subject:
-    organizations:
-      - hitrecord
-  dnsNames:
-  - 'hitrecord.fahadahammed.com'
-  issuerRef:
-    name: letsencrypt-prod
-    kind: ClusterIssuer
----
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -206,14 +206,14 @@ spec:
     - host: hitrecord.fahadahammed.com
       http:
         paths:
-          - path: /api/latest
+          - path: /new
             pathType: Prefix
             backend:
               service:
                 name: hit-record-api-latest-service
                 port:
                   number: 80
-          - path: /api/old
+          - path: /old
             pathType: Prefix
             backend:
               service:

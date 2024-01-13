@@ -7,8 +7,8 @@ from src.ops.redisops import RedisOps
 import socket
 
 
-@app.route(f"/", methods=["GET"])
-@app.route(f"/api/{app.config.get('API_VERSION')}/", methods=["GET"])
+@app.route(f"/api", methods=["GET"])
+@app.route(f"/api/", methods=["GET"])
 def index():
     to_return = {
         "msg": "Welcome to hit_record! I am going to record the hit count in redis.",
