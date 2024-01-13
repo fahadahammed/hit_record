@@ -15,7 +15,8 @@ def index():
         "msg": "Welcome to hit_record! I am going to record the hit count in redis.",
         "datetime": datetime.datetime.today().utcnow().replace(microsecond=0),
         "version": app.config.get("API_VERSION"),
-        "hostname": str(socket.gethostname())
+        "hostname": str(socket.gethostname()),
+        "app_state": f"{app.config.get('API_STATE')}"
     }
     try:
         RedisOps().rc.incr(name="hits")
