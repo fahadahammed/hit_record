@@ -3,7 +3,7 @@ import datetime
 
 from src import app
 from flask import jsonify
-from src.lib.redisops import RedisOps
+from src.ops.redisops import RedisOps
 import socket
 
 

@@ -104,12 +104,12 @@ spec:
     spec:
       containers:
         - name: hit-record-api-latest
-          image: fahadahammed/hit_record:latest
+          image: fahadahammed/hitrecord:#{LATEST_TAG}#
           ports:
             - containerPort: 22000
           env:
             - name: API_VERSION
-              value: latest
+              value: #{LATEST_TAG}#
             - name: REDIS_HOST
               valueFrom:
                 configMapKeyRef:
@@ -135,12 +135,12 @@ spec:
     spec:
       containers:
         - name: hit-record-api-old
-          image: fahadahammed/hit_record:latest
+          image: fahadahammed/hitrecord:#{LAST_TAG}#
           ports:
             - containerPort: 22000
           env:
             - name: API_VERSION
-              value: old
+              value: #{LAST_TAG}#
             - name: REDIS_HOST
               valueFrom:
                 configMapKeyRef:

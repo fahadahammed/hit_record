@@ -34,7 +34,17 @@ jobs:
       id: get-tag
       shell: bash
       run: |
-        LAST_TAG=$(curl -k -s https://hitrecord.fahadahammed.com/api/latest/ | jq -r '.version')
+        api_url="https://hitrecord.fahadahammed.com/api/latest/"
+        fallback_version='{"version": "'"$VERSION"'"}'
+
+        response=$(curl -k -s -w "%{http_code}" "$api_url")
+        status_code="${response: -3}"  # Extract the last 3 characters, which represent the status code
+
+        if [ "$status_code" -eq 200 ]; then
+            LAST_TAG=$(echo "$response" | jq -r '.version')
+        else
+            LAST_TAG=$(echo "$fallback_version" | jq -r '.version')
+        fi
         echo "LAST_TAG=$LAST_TAG" >> $GITHUB_ENV
 
     - name: Check Variables
